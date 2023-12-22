@@ -168,6 +168,8 @@ if __name__ == '__main__':
     for i,acc_esno in enumerate(StoreRes):
         plt.plot(x_ticks,acc_esno.flatten(),line_styles[i],label='Es/No:'+str(EsN0dB[i])+'dB')
     plt.legend()
+    plt.xlabel('Epochs')
+    plt.ylabel('Acc')
     plt.savefig('./Result.png',dpi=300)
     # pickle.dump('EsNo: '+str(EsN0dB), open('./Results/EsNo_acc.db', 'ab'))
     # pickle.dump(StoreRes, open('./Results', 'ab'))
