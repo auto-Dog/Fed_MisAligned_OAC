@@ -58,6 +58,17 @@ def per_pkt_transmission(args, MM, TransmittedSymbols):
     AWGNnoise = np.reshape(AWGNnoise, (1,MM*(LL+1)), 'F')
     samples = samples + AWGNnoise[0][0:-1]
 
+    # normal estimator without super sample
+    if args.Estimator == 0:
+        for i in range(MM):
+            pFiltersIndex = (np.arange(LL) + 1) * MM - (i+1)
+            if i==0:
+                output = samples[pFiltersIndex] 
+            else:
+                output += samples[pFiltersIndex]
+        output = output/MM
+        return output/MM
+
     # aligned_sample estiamtor
     if args.Estimator == 1:
         MthFiltersIndex = (np.arange(LL) + 1) * MM - 1
