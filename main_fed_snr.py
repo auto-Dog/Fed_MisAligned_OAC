@@ -50,8 +50,8 @@ def Main(args):
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
         trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=transform_train)
-        dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=transform_test)
+        dataset_train = datasets.CIFAR10('/kaggle/input/cifar10-python/', train=True, download=False, transform=transform_train)
+        dataset_test = datasets.CIFAR10('/kaggle/input/cifar10-python/', train=False, download=False, transform=transform_test)
         if args.iid:
             dict_users = cifar_iid(dataset_train, args.num_users)
         else:
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
-    EsN0dB = np.arange(30,41,5)
+    EsN0dB = np.arange(-10,10,5)
 
     StoreRes = []
     for idx in range(len(EsN0dB)):
@@ -153,6 +153,21 @@ if __name__ == '__main__':
         outputSeq = Main(args)
         StoreRes.append(list(outputSeq))        
 
-        # print and store the results
-        print(StoreRes)
-        pickle.dump(StoreRes, open('./Results', 'wb'))
+    # print and store the results
+    with open('./EsNo_acc.txt', 'w') as fv:
+        fv.write('EsNo: '+str(EsN0dB)+'\r\n')
+        for points in StoreRes:    # 将列表元素写入
+            fv.write(str(list(points))+',')
+        fv.write('\r\n')
+
+    print(StoreRes)
+    import matplotlib.pyplot as plt
+    x_ticks = np.arange(0,101,5)
+    line_styles = ['b-*','b-o','b-v','b-+','b-^']
+    plt.figure()
+    for i,acc_esno in enumerate(StoreRes):
+        plt.plot(x_ticks,acc_esno.flatten(),line_styles[i],label='Es/No:'+str(EsN0dB[i])+'dB')
+    plt.legend()
+    plt.savefig('./Result.png',dpi=300)
+    # pickle.dump('EsNo: '+str(EsN0dB), open('./Results/EsNo_acc.db', 'ab'))
+    # pickle.dump(StoreRes, open('./Results', 'ab'))
