@@ -5,6 +5,7 @@
 import argparse
 
 pth_root = './grads/'
+running_root = './run'
 def args_parser():
     parser = argparse.ArgumentParser()
     # federated arguments

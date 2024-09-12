@@ -10,14 +10,19 @@ from torchvision import datasets, transforms
 import torch
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
-from utils.options import args_parser
+from utils.options import args_parser,running_root
 from utils.saveGrad import save_grad
+from utils.logger import Logger
+
 from models.Update import LocalUpdate
 from models.Nets import *
 from models.shufflenetv2 import *
 from models.Fed import *
 from models.test import test_img
 import random, time, pdb, pickle
+
+logger = Logger(running_root)
+logger.global_step = 0
 
 def setup_seed(seed):
      torch.manual_seed(seed)
@@ -26,6 +31,14 @@ def setup_seed(seed):
      random.seed(seed)
      torch.backends.cudnn.deterministic = True
 
+def log_metric(prefix,acc,loss,logger):
+    # avg_mse = np.mean(np.array(acc))
+    # auc = roc_auc_score(target, prob)
+    if loss != None:
+        logger.log_scalar(prefix+'/loss',loss,print=False)
+    # logger.log_scalar(prefix+'/AUC',auc,print=True)
+    if acc != None:
+        logger.log_scalar(prefix+'/ACC',acc, print=False)
 
 def Main(args):
     setup_seed(args.seed)
@@ -77,6 +90,7 @@ def Main(args):
     acc_store = np.array([])
     w_glob = net_glob.state_dict() # initial global weights
     for iter in range(args.epochs):
+        logger.update_step()
         # record the running time of an iteration
         startTime = time.time()
 
@@ -85,6 +99,7 @@ def Main(args):
             net_glob.eval()
             acc_test, _ = test_img(net_glob, dataset_test, args)
             acc_store = np.append(acc_store, acc_test.numpy())
+            log_metric('Test',acc_test.numpy(),None,logger)
             print("Test accuracies every 5 itertaions =", acc_store)
             net_glob.train()
 
@@ -105,8 +120,9 @@ def Main(args):
             w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device), history_dict=history_dict)
             w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
-            
-        save_grad(idxs_users,w_locals,iter) # save intermediate results for analysis
+        if (args.save_grad == True) and (np.mod(iter,10) == 0):   
+            print('## Saving Gradients... ##') 
+            save_grad(idxs_users,w_locals,iter) # save intermediate results for analysis
         # ----------------------------------------------------------------------- Federated Averaging
         if args.Aligned == 0: # perfect channel ->->-> no misalignments, no noise
             current_dict = FedAvg(w_locals, args)
@@ -125,6 +141,7 @@ def Main(args):
         loss_avg = sum(loss_locals) / len(loss_locals)
         print('Round {:3d}, Average loss {:.3f}, Time Cosumed {:.3f}'.format(iter, loss_avg, time.time()-startTime))
         loss_train.append(loss_avg)
+        log_metric('Train',None,loss_avg,logger)
 
 
     # testing
