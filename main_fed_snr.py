@@ -11,6 +11,7 @@ import torch
 
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
+from utils.saveGrad import save_grad
 from models.Update import LocalUpdate
 from models.Nets import *
 from models.shufflenetv2 import *
@@ -102,12 +103,10 @@ def Main(args):
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
             w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device), history_dict=history_dict)
-            if args.all_clients:
-                w_locals[idx] = copy.deepcopy(w)
-            else:
-                w_locals.append(copy.deepcopy(w))
+            w_locals.append(copy.deepcopy(w))
             loss_locals.append(copy.deepcopy(loss))
-        
+            
+        save_grad(idxs_users,w_locals,iter) # save intermediate results for analysis
         # ----------------------------------------------------------------------- Federated Averaging
         if args.Aligned == 0: # perfect channel ->->-> no misalignments, no noise
             current_dict = FedAvg(w_locals, args)
@@ -142,34 +141,34 @@ if __name__ == '__main__':
     # parse args
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    Main(args)
+    # EsN0dB = np.arange(-10,10,5)
 
-    EsN0dB = np.arange(-10,10,5)
+    # StoreRes = []
+    # for idx in range(len(EsN0dB)):
+    #     args.EsN0dB = EsN0dB[idx]
+    #     args.lr = 0.1
+    #     print("Running args.EsN0dB = ", args.EsN0dB)
+    #     outputSeq = Main(args)
+    #     StoreRes.append(list(outputSeq))        
 
-    StoreRes = []
-    for idx in range(len(EsN0dB)):
-        args.EsN0dB = EsN0dB[idx]
-        args.lr = 0.1
-        print("Running args.EsN0dB = ", args.EsN0dB)
-        outputSeq = Main(args)
-        StoreRes.append(list(outputSeq))        
+    # # print and store the results
+    # with open('./EsNo_acc.txt', 'w') as fv:
+    #     fv.write('EsNo: '+str(EsN0dB)+'\r\n')
+    #     for points in StoreRes:    # 将列表元素写入
+    #         fv.write(str(list(points))+',')
+    #     fv.write('\r\n')
 
-    # print and store the results
-    with open('./EsNo_acc.txt', 'w') as fv:
-        fv.write('EsNo: '+str(EsN0dB)+'\r\n')
-        for points in StoreRes:    # 将列表元素写入
-            fv.write(str(list(points))+',')
-        fv.write('\r\n')
-
-    print(StoreRes)
-    import matplotlib.pyplot as plt
-    x_ticks = np.arange(0,101,5)
-    line_styles = ['b-*','b-o','b-v','b-+','b-^']
-    plt.figure()
-    for i,acc_esno in enumerate(StoreRes):
-        plt.plot(x_ticks,acc_esno.flatten(),line_styles[i],label='Es/No:'+str(EsN0dB[i])+'dB')
-    plt.legend()
-    plt.xlabel('Epochs')
-    plt.ylabel('Acc')
-    plt.savefig('./Result.png',dpi=300)
-    # pickle.dump('EsNo: '+str(EsN0dB), open('./Results/EsNo_acc.db', 'ab'))
-    # pickle.dump(StoreRes, open('./Results', 'ab'))
+    # print(StoreRes)
+    # import matplotlib.pyplot as plt
+    # x_ticks = np.arange(0,101,5)
+    # line_styles = ['b-*','b-o','b-v','b-+','b-^']
+    # plt.figure()
+    # for i,acc_esno in enumerate(StoreRes):
+    #     plt.plot(x_ticks,acc_esno.flatten(),line_styles[i],label='Es/No:'+str(EsN0dB[i])+'dB')
+    # plt.legend()
+    # plt.xlabel('Epochs')
+    # plt.ylabel('Acc')
+    # plt.savefig('./Result.png',dpi=300)
+    # # pickle.dump('EsNo: '+str(EsN0dB), open('./Results/EsNo_acc.db', 'ab'))
+    # # pickle.dump(StoreRes, open('./Results', 'ab'))

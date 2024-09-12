@@ -4,6 +4,7 @@
 
 import argparse
 
+pth_root = './grads/'
 def args_parser():
     parser = argparse.ArgumentParser()
     # federated arguments
@@ -42,6 +43,6 @@ def args_parser():
     parser.add_argument('--stopping_rounds', type=int, default=10, help='rounds of early stopping')
     parser.add_argument('--verbose', action='store_true', help='verbose print')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
-    parser.add_argument('--all_clients', action='store_true', help='aggregation over all clients')
+    parser.add_argument('--save_grad', action='store_true', help='save each client\'s gradient file, every 10 epoches')
     args = parser.parse_args()
     return args
