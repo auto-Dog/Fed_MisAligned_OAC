@@ -29,17 +29,18 @@ def per_pkt_transmission(args, MM, TransmittedSymbols):
     else:
         hh = np.exp(1j*np.random.uniform(0,1,(MM,1)) * 4* np.pi /4)
     # print(hh)   # debug
-    # complex pass the complex channel
-    # 1. Use Matrix Mul Mythod
     LL = len(TransmittedSymbols[0])
     hh_expand = np.tile(hh,(1,TransmittedSymbols.shape[1]))
-    TMAT1 = TransmittedSymbols*hh_expand
-    d_data_vec = TMAT1.T.reshape(-1,1)
-    D_array = np.zeros((MM*LL+MM-1,MM*LL))
-    for idx in range(MM*LL):    # 按列依次赋值
-        D_array[np.arange(MM)+idx, idx] = 1.
-    samples1 = D_array @ d_data_vec
-    samples = samples1.flatten()
+
+    # complex pass the complex channel
+    # # 1. Use Matrix Mul Mythod
+    # TMAT1 = TransmittedSymbols*hh_expand
+    # d_data_vec = TMAT1.T.reshape(-1,1)
+    # D_array = np.zeros((MM*LL+MM-1,MM*LL))
+    # for idx in range(MM*LL):    # 按列依次赋值
+    #     D_array[np.arange(MM)+idx, idx] = 1.
+    # samples1 = D_array @ d_data_vec
+    # samples1 = samples1.flatten()
 
     # 2. author's method
     for idx in range(MM):
@@ -52,6 +53,17 @@ def per_pkt_transmission(args, MM, TransmittedSymbols):
     # SigPower = np.max(np.power(np.abs(SignalPart),2))
     EsN0 = np.power(10, args.EsN0dB/10.0)
     noisePower = SigPower/EsN0
+
+    # Oversample the received signal(might cause error)
+    RepeatedSymbols = np.repeat(TransmittedSymbols, MM, axis = 1)   # 每个符号重复M遍之后，错位叠加成一行
+    for idx in np.arange(MM):
+        extended = np.array([np.r_[np.zeros(idx), RepeatedSymbols[idx], np.zeros(MM-idx-1)]])
+        if idx == 0:
+            samples = extended
+        else:
+            samples = np.r_[samples, extended]
+    samples = np.sum(samples, axis=0)
+    # print('difference:',np.sum(np.abs(samples1-samples))) # debug
 
     # noise algorithm 2
     def awgn(x, snr):
@@ -150,6 +162,7 @@ def BP_Decoding(samples, M, L, hh, noisePowerVec):
     def fill_mat_with_piece(piece,obj_len):
         '''Fill a (obj_len x obj_len) matrix B, with repeated pieces of A'''
         num_tile = (obj_len // piece.shape[0]) + 1
+        # print('Tile number:',num_tile)  # debug
         out = np.tile(piece,(num_tile,num_tile))
         out = out[0:obj_len,0:obj_len]
         return out
@@ -305,7 +318,7 @@ def test():
     MM = 4
     LL = 50
     args = args_parser()
-    args.EsN0dB = 20
+    args.EsN0dB = 5
     args.phaseOffset = 3
     # Generate TransmittedSymbols
     for m in range(MM):
