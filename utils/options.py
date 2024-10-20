@@ -12,7 +12,7 @@ def args_parser():
     parser.add_argument('--short', type=float, default=0, help="short or long pkt")
     parser.add_argument('--Aligned', type=float, default=1, help="Aligned or not")
     parser.add_argument('--maxDelay', type=float, default=0.9, help="the maximum delay of the devices")
-    parser.add_argument('--phaseOffset', type=float, default=0, help="phase offsets, can be 0->0; 1->2pi/4; 2->2pi/2; 3->2pi")
+    parser.add_argument('--phaseOffset', type=float, default=0, help="phase offsets, can be 0->0; 1->2pi/4; 2->3pi/4; 3->pi")
     parser.add_argument('--EsN0dB', type=float, default=100.0, help="variance of the noise")
     parser.add_argument('--Estimator', type=float, default=1, help="1->aligned_sample,2->ML,3->SP-ML,4->Wiener")
     parser.add_argument('--epochs', type=int, default=100, help="rounds of training")
