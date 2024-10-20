@@ -70,7 +70,7 @@ def FedAvg_ML(w, args):
     TransmittedSymbols = np.c_[TransmittedSymbols,np.zeros([M,1])]  # 4 * 631928
 
     # -------------------------------------------------------- long pkts
-    if args.short == 0:
+    if args.short == 0: # BUG: settings should vary according to CPU core number
         numPkt = 44
         lenPkt = int((L+1)/numPkt)
         pool = Pool(processes=numPkt) # creat 11 processes
@@ -95,11 +95,11 @@ def FedAvg_ML(w, args):
                 ReceivedComplexPkt = np.append(ReceivedComplexPkt, output)
     else:
         # -------------------------------------------------------- short pkts
-        numPkt = 946 # 22 * 43
-        lenPkt = int((L+1)/numPkt)
         # multi-processing
         numCPU = cpu_count()
         # numCPU = 22
+        numPkt = numCPU*43 # 22 * 43
+        lenPkt = int((L+1)/numPkt)
         for loop in range(43):
             pktBatch = TransmittedSymbols[:,(loop*lenPkt*numCPU):((loop+1)*lenPkt*numCPU)]
             pool = Pool(processes=numCPU) # creat 11 processes
