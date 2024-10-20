@@ -318,12 +318,12 @@ def test():
     MM = 4
     LL = 50
     args = args_parser()
-    args.EsN0dB = 5
+    args.EsN0dB = 50
     args.phaseOffset = 3
     # Generate TransmittedSymbols
     for m in range(MM):
         symbols = 2 * np.random.randint(2, size=(2,LL)) - 1
-        ComplexSymbols = symbols[0,:] + symbols[1,:] * 0j   # only real part get modulation
+        ComplexSymbols = symbols[0,:] + symbols[1,:] * 1j   # only real part get modulation
         if m == 0:
             TransmittedSymbols = np.array([ComplexSymbols])
         else:
@@ -358,6 +358,8 @@ def test():
     output = per_pkt_transmission(args, MM, TransmittedSymbols.copy())
     MSE4 = np.mean(np.power(np.abs(output.flatten() - target.flatten()),2))
     print('MSE4 = ', MSE4)
+    # print('Target:',target.flatten())    # debug
+    # print('Output:',output.flatten())    # debug
 
 
 if __name__ == "__main__":

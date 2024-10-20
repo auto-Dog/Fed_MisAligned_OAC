@@ -149,7 +149,9 @@ def FedAvg_ML(w, args):
             ParamsLayer_reshaped = StoreRecover[idx](ParamsLayer)
             # convert to torch in cuda()
             w_avg[k] = torch.from_numpy(ParamsLayer_reshaped).cuda()
-
+            w_avg[k] = torch.div(w_avg[k], len(w))  # modified 24.10.20: 
+                                                    # our BPDecoding does not calculate mean but direct sum, 
+                                                    # so the mean operation should be excuted here
             startIndex += lenLayer
             idx += 1
 
