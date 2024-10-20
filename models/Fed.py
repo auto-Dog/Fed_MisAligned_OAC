@@ -96,7 +96,7 @@ def FedAvg_ML(w, args):
     else:
         # -------------------------------------------------------- short pkts
         # multi-processing
-        numCPU = cpu_count()
+        numCPU = min(cpu_count(),22)
         # numCPU = 22
         numPkt = numCPU*43 # 22 * 43
         lenPkt = int((L+1)/numPkt)
