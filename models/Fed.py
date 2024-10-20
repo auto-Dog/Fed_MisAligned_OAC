@@ -98,8 +98,8 @@ def FedAvg_ML(w, args):
         numPkt = 946 # 22 * 43
         lenPkt = int((L+1)/numPkt)
         # multi-processing
-        # numCPU = cpu_count()
-        numCPU = 22
+        numCPU = cpu_count()
+        # numCPU = 22
         for loop in range(43):
             pktBatch = TransmittedSymbols[:,(loop*lenPkt*numCPU):((loop+1)*lenPkt*numCPU)]
             pool = Pool(processes=numCPU) # creat 11 processes
