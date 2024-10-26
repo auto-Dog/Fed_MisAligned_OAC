@@ -71,12 +71,15 @@ def per_pkt_transmission(args, MM, TransmittedSymbols):
         x: numpy array
         snr: int, dB
         '''
+        np.random.seed(1896)
         len_x = x.flatten().shape[0]
         Ps = np.sum(np.power(x, 2)) / len_x
         Pn = Ps / (np.power(10, snr / 10))
         noise = np.random.randn(x.shape[0]) * np.sqrt(Pn)/2 + 1j * (np.random.randn(x.shape[0]) * np.sqrt(Pn)/2)
         return x + noise
     samples = awgn(samples,args.EsN0dB)
+    # multiple_sample_times = 10    # If considering matched filtering process (use discrete mean), samples' SNR would be larger than EsN0
+    # EsN0dB_multiple_dB = 10*np.log10(multiple_sample_times)+args.EsN0dB
 
     # np.save('orimethod_samples.npy',samples.flatten())  # debug
     # outputs = [[],[],[],[],[],[]]
@@ -318,11 +321,12 @@ def test():
     MM = 4
     LL = 50
     args = args_parser()
-    args.EsN0dB = 50
-    args.phaseOffset = 3
+    args.EsN0dB = 0
+    args.phaseOffset = 0
     # Generate TransmittedSymbols
     for m in range(MM):
-        symbols = 2 * np.random.randint(2, size=(2,LL)) - 1
+        # np.random.seed(m+1)
+        symbols = 2 * np.random.randint(-10,10, size=(2,LL)) - 1
         ComplexSymbols = symbols[0,:] + symbols[1,:] * 1j   # only real part get modulation
         if m == 0:
             TransmittedSymbols = np.array([ComplexSymbols])
@@ -358,8 +362,8 @@ def test():
     output = per_pkt_transmission(args, MM, TransmittedSymbols.copy())
     MSE4 = np.mean(np.power(np.abs(output.flatten() - target.flatten()),2))
     print('MSE4 = ', MSE4)
-    # print('Target:',target.flatten())    # debug
-    # print('Output:',output.flatten())    # debug
+    print('Target:',target.flatten()[:10])    # debug
+    print('Output:',output.flatten()[:10])    # debug
 
 
 if __name__ == "__main__":
